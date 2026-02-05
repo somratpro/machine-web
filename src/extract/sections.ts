@@ -114,9 +114,38 @@ function isHeading(tag: string): boolean {
   return /^h[1-4]$/.test(tag);
 }
 
+function shouldCapture(tag: string): boolean {
+  return (
+    isHeading(tag) ||
+    ["p", "ul", "ol", "table", "img", "pre", "code", "blockquote", "nav", "footer"].includes(tag)
+  );
+}
+
+function walkNodes(root: ReturnType<CheerioAPI>, $: CheerioAPI): AnyNode[] {
+  const results: AnyNode[] = [];
+  const stack = root.children().toArray();
+
+  while (stack.length) {
+    const el = stack.shift() as AnyNode;
+    const tag = tagNameOf(el);
+    if (tag && shouldCapture(tag)) {
+      results.push(el);
+      continue;
+    }
+    const children = (el as any).children;
+    if (Array.isArray(children) && children.length) {
+      for (const child of children) {
+        stack.push(child);
+      }
+    }
+  }
+
+  return results;
+}
+
 export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MCPSection[] {
   const sections: MCPSection[] = [];
-  const children = root.children().toArray();
+  const nodes = walkNodes(root, $);
 
   let currentHeading: MCPSection | null = null;
   let sectionIndex = 0;
@@ -125,7 +154,7 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
     sections.push(section);
   };
 
-  for (const el of children) {
+  for (const el of nodes) {
     const tag = tagNameOf(el);
     if (!tag) continue;
 

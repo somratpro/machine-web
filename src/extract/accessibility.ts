@@ -17,9 +17,17 @@ function selectorFor($: CheerioAPI, el: any): string {
 
 export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
   const nodes: MCPAccessibilityNode[] = [];
+  const seen = new Set<string>();
+
+  const pushNode = (node: MCPAccessibilityNode) => {
+    const key = `${node.role}|${node.label || ""}|${node.level || ""}|${node.selector || ""}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    nodes.push(node);
+  };
 
   $("[role]").each((_: number, el: any) => {
-    nodes.push({
+    pushNode({
       role: $(el).attr("role") || "",
       label: $(el).attr("aria-label") || undefined,
       selector: selectorFor($, el)
@@ -27,7 +35,7 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
   });
 
   $("[aria-label]").each((_: number, el: any) => {
-    nodes.push({
+    pushNode({
       role: $(el).attr("role") || el.tagName || "",
       label: $(el).attr("aria-label") || undefined,
       selector: selectorFor($, el)
@@ -37,7 +45,7 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
   $("h1, h2, h3, h4, h5, h6").each((_: number, el: any) => {
     const tag = (el.tagName || "").toLowerCase();
     const level = Number(tag.replace("h", ""));
-    nodes.push({
+    pushNode({
       role: "heading",
       label: $(el).text().trim() || undefined,
       level,
@@ -47,7 +55,7 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
 
   $("button, a").each((_: number, el: any) => {
     const tag = (el.tagName || "").toLowerCase();
-    nodes.push({
+    pushNode({
       role: tag === "a" ? "link" : "button",
       label: $(el).text().trim() || $(el).attr("aria-label") || undefined,
       selector: selectorFor($, el)

@@ -18,7 +18,7 @@ export function extractMCPFromHTML(html: string, options: Omit<ExtractOptions, "
   const root = mainEl.length ? mainEl.get(0) : $("body").first().get(0)
 
   const title = cleanText($("title").first().text()) || undefined
-  const description = $("meta[name='description']").attr("content") || undefined
+  const description = cleanText($("meta[name='description']").attr("content") || "") || undefined
   const canonical = $("link[rel='canonical']").attr("href") || undefined
   const language = $("html").attr("lang") || undefined
 
