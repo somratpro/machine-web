@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCPDocument",
+  "type": "object",
+  "required": ["url", "content", "meta"],
+  "properties": {
+    "url": { "type": "string" },
+    "canonical": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "language": { "type": "string" },
+    "content": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/section" }
+    },
+    "accessibility": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/accessibility" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/action" }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["version", "generatedAt", "source"],
+      "properties": {
+        "version": { "type": "number" },
+        "generatedAt": { "type": "string" },
+        "framework": { "type": "string" },
+        "source": { "enum": ["ssr", "static", "fetch"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "section": {
+      "type": "object",
+      "required": ["id", "role"],
+      "properties": {
+        "id": { "type": "string" },
+        "role": {
+          "enum": [
+            "heading",
+            "paragraph",
+            "list",
+            "table",
+            "image",
+            "code",
+            "quote",
+            "price",
+            "navigation",
+            "footer",
+            "unknown"
+          ]
+        },
+        "heading": { "type": "string" },
+        "text": { "type": "string" },
+        "html": { "type": "string" },
+        "structured": { "type": "object" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/section" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "accessibility": {
+      "type": "object",
+      "required": ["role"],
+      "properties": {
+        "role": { "type": "string" },
+        "label": { "type": "string" },
+        "level": { "type": "number" },
+        "selector": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["name", "method", "endpoint", "authRequired"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "method": { "enum": ["GET", "POST", "PUT", "DELETE"] },
+        "endpoint": { "type": "string" },
+        "authRequired": { "type": "boolean" },
+        "inputSchema": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
