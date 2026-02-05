@@ -1,18 +1,18 @@
-# @machine-web/mcp
+# machine-web-mcp
 
 Expose a `/.mcp` endpoint that returns a machine-consumable JSON description of a web page. This helps AI agents and other tools read structured content without crawling, embeddings, or SaaS.
 
 ## Install
 
 ```bash
-npm install @machine-web/mcp
+npm install machine-web-mcp
 ```
 
 ## Express Example
 
 ```ts
 import express from "express"
-import { createMCPMiddleware } from "@machine-web/mcp"
+import { createMCPMiddleware } from "machine-web-mcp"
 
 const app = express()
 
@@ -36,7 +36,7 @@ GET /.mcp?url=/
 ```ts
 // pages/api/.mcp.ts
 import type { NextApiRequest, NextApiResponse } from "next"
-import { createMCPHandlerNext } from "@machine-web/mcp"
+import { createMCPHandlerNext } from "machine-web-mcp"
 
 const handler = createMCPHandlerNext()
 
