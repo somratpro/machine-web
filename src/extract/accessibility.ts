@@ -1,7 +1,7 @@
 import type { CheerioAPI } from "cheerio";
 import type { MCPAccessibilityNode } from "../types";
 
-function selectorFor($: CheerioAPI, el: any): string {
+function selectorFor($: CheerioAPI, el: any): string | undefined {
   const tag = (el.tagName || "").toLowerCase();
   const id = $(el).attr("id");
   const classes = ($(el).attr("class") || "")
@@ -12,7 +12,8 @@ function selectorFor($: CheerioAPI, el: any): string {
   let sel = tag;
   if (id) sel += `#${id}`;
   if (classes) sel += `.${classes}`;
-  return sel;
+  if (!id && !classes) return undefined;
+  return sel || undefined;
 }
 
 export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
@@ -20,6 +21,7 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
   const seen = new Set<string>();
 
   const pushNode = (node: MCPAccessibilityNode) => {
+    if (!node.selector) return;
     const key = `${node.role}|${node.label || ""}|${node.level || ""}|${node.selector || ""}`;
     if (seen.has(key)) return;
     seen.add(key);

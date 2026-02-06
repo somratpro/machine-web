@@ -123,6 +123,7 @@ function extractSections(root, $) {
     const sections = [];
     const nodes = walkNodes(root, $);
     let currentHeading = null;
+    const pendingBeforeHeading = [];
     let sectionIndex = 0;
     const pushSection = (section) => {
         sections.push(section);
@@ -140,6 +141,9 @@ function extractSections(root, $) {
                 text: headingText,
                 html: htmlOf($, el)
             };
+            if (pendingBeforeHeading.length) {
+                currentHeading.children = pendingBeforeHeading.splice(0);
+            }
             pushSection(currentHeading);
             continue;
         }
@@ -171,8 +175,11 @@ function extractSections(root, $) {
             currentHeading.children.push(section);
         }
         else {
-            pushSection(section);
+            pendingBeforeHeading.push(section);
         }
+    }
+    if (!currentHeading && pendingBeforeHeading.length) {
+        sections.push(...pendingBeforeHeading);
     }
     return sections;
 }

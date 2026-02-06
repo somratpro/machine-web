@@ -14,12 +14,16 @@ function selectorFor($, el) {
         sel += `#${id}`;
     if (classes)
         sel += `.${classes}`;
-    return sel;
+    if (!id && !classes)
+        return undefined;
+    return sel || undefined;
 }
 function extractAccessibility($) {
     const nodes = [];
     const seen = new Set();
     const pushNode = (node) => {
+        if (!node.selector)
+            return;
         const key = `${node.role}|${node.label || ""}|${node.level || ""}|${node.selector || ""}`;
         if (seen.has(key))
             return;

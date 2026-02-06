@@ -148,6 +148,7 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
   const nodes = walkNodes(root, $);
 
   let currentHeading: MCPSection | null = null;
+  const pendingBeforeHeading: MCPSection[] = [];
   let sectionIndex = 0;
 
   const pushSection = (section: MCPSection) => {
@@ -167,6 +168,9 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
         text: headingText,
         html: htmlOf($, el)
       };
+      if (pendingBeforeHeading.length) {
+        currentHeading.children = pendingBeforeHeading.splice(0);
+      }
       pushSection(currentHeading);
       continue;
     }
@@ -196,8 +200,12 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
       currentHeading.children = currentHeading.children || [];
       currentHeading.children.push(section);
     } else {
-      pushSection(section);
+      pendingBeforeHeading.push(section);
     }
+  }
+
+  if (!currentHeading && pendingBeforeHeading.length) {
+    sections.push(...pendingBeforeHeading);
   }
 
   return sections;
