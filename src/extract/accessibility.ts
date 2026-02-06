@@ -20,6 +20,11 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
   const nodes: MCPAccessibilityNode[] = [];
   const seen = new Set<string>();
 
+  const scopeFor = (el: any): "content" | "navigation" => {
+    const isNav = $(el).closest("nav,[role='navigation']").length > 0;
+    return isNav ? "navigation" : "content";
+  };
+
   const pushNode = (node: MCPAccessibilityNode) => {
     if (!node.selector) return;
     const key = `${node.role}|${node.label || ""}|${node.level || ""}|${node.selector || ""}`;
@@ -32,7 +37,8 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
     pushNode({
       role: $(el).attr("role") || "",
       label: $(el).attr("aria-label") || undefined,
-      selector: selectorFor($, el)
+      selector: selectorFor($, el),
+      scope: scopeFor(el)
     });
   });
 
@@ -40,7 +46,8 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
     pushNode({
       role: $(el).attr("role") || el.tagName || "",
       label: $(el).attr("aria-label") || undefined,
-      selector: selectorFor($, el)
+      selector: selectorFor($, el),
+      scope: scopeFor(el)
     });
   });
 
@@ -51,7 +58,8 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
       role: "heading",
       label: $(el).text().trim() || undefined,
       level,
-      selector: selectorFor($, el)
+      selector: selectorFor($, el),
+      scope: scopeFor(el)
     });
   });
 
@@ -60,7 +68,8 @@ export function extractAccessibility($: CheerioAPI): MCPAccessibilityNode[] {
     pushNode({
       role: tag === "a" ? "link" : "button",
       label: $(el).text().trim() || $(el).attr("aria-label") || undefined,
-      selector: selectorFor($, el)
+      selector: selectorFor($, el),
+      scope: scopeFor(el)
     });
   });
 

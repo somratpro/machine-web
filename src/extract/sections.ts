@@ -16,6 +16,28 @@ function tagNameOf(el: AnyNode): string {
   return typeof (el as any).tagName === "string" ? (el as any).tagName.toLowerCase() : "";
 }
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function hashString(value: string): string {
+  let hash = 5381;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 33) ^ value.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function buildId(base: string, seen: Map<string, number>): string {
+  const count = seen.get(base) || 0;
+  seen.set(base, count + 1);
+  return count === 0 ? base : `${base}-${count}`;
+}
+
 function elementRole(tag: string): MCPSection["role"] {
   switch (tag) {
     case "p":
@@ -143,9 +165,14 @@ function walkNodes(root: ReturnType<CheerioAPI>, $: CheerioAPI): AnyNode[] {
   return results;
 }
 
-export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MCPSection[] {
+export function extractSections(
+  root: ReturnType<CheerioAPI>,
+  $: CheerioAPI,
+  options: { includeHtml?: boolean } = {}
+): MCPSection[] {
   const sections: MCPSection[] = [];
   const nodes = walkNodes(root, $);
+  const seenIds = new Map<string, number>();
 
   let currentHeading: MCPSection | null = null;
   const pendingBeforeHeading: MCPSection[] = [];
@@ -161,27 +188,33 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
 
     if (isHeading(tag)) {
       const headingText = textOf($, el);
+      const level = Number(tag.replace("h", ""));
+      const baseId = `heading-${slugify(headingText)}-${hashString(headingText)}`;
       currentHeading = {
-        id: `section-${sectionIndex++}`,
+        id: buildId(baseId, seenIds),
         role: "heading",
         heading: headingText,
-        text: headingText,
-        html: htmlOf($, el)
+        level: Number.isNaN(level) ? undefined : level,
+        html: options.includeHtml ? htmlOf($, el) : undefined
       };
       if (pendingBeforeHeading.length) {
         currentHeading.children = pendingBeforeHeading.splice(0);
       }
       pushSection(currentHeading);
+      sectionIndex += 1;
       continue;
     }
 
     const role = elementRole(tag);
     const text = textOf($, el);
+    const imageStructured = role === "image" ? extractImage($, el) : undefined;
+    const contentForId = role === "image" ? JSON.stringify(imageStructured) : text || htmlOf($, el);
+    const baseId = `${role}-${hashString(contentForId || `${role}-${sectionIndex}`)}`;
     const section: MCPSection = {
-      id: `section-${sectionIndex++}`,
+      id: buildId(baseId, seenIds),
       role,
       text: text || undefined,
-      html: htmlOf($, el) || undefined
+      html: options.includeHtml ? htmlOf($, el) || undefined : undefined
     };
 
     if (role === "list") {
@@ -191,18 +224,20 @@ export function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MC
     } else if (role === "code") {
       section.structured = extractCode($, el);
     } else if (role === "image") {
-      section.structured = extractImage($, el);
+      section.structured = imageStructured;
     } else if (role === "paragraph" && text && PRICE_RE.test(text)) {
       section.role = "price";
     }
 
-    if (currentHeading) {
-      currentHeading.children = currentHeading.children || [];
-      currentHeading.children.push(section);
-    } else {
-      pendingBeforeHeading.push(section);
-    }
+  if (currentHeading) {
+    currentHeading.children = currentHeading.children || [];
+    currentHeading.children.push(section);
+  } else {
+    pendingBeforeHeading.push(section);
   }
+
+  sectionIndex += 1;
+}
 
   if (!currentHeading && pendingBeforeHeading.length) {
     sections.push(...pendingBeforeHeading);

@@ -56,6 +56,7 @@
           ]
         },
         "heading": { "type": "string" },
+        "level": { "type": "number" },
         "text": { "type": "string" },
         "html": { "type": "string" },
         "structured": { "type": "object" },
@@ -73,7 +74,8 @@
         "role": { "type": "string" },
         "label": { "type": "string" },
         "level": { "type": "number" },
-        "selector": { "type": "string" }
+        "selector": { "type": "string" },
+        "scope": { "enum": ["content", "navigation"] }
       },
       "additionalProperties": false
     },

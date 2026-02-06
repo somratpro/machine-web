@@ -11,6 +11,25 @@ function htmlOf($, el) {
 function tagNameOf(el) {
     return typeof el.tagName === "string" ? el.tagName.toLowerCase() : "";
 }
+function slugify(value) {
+    return value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 64);
+}
+function hashString(value) {
+    let hash = 5381;
+    for (let i = 0; i < value.length; i += 1) {
+        hash = (hash * 33) ^ value.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(36);
+}
+function buildId(base, seen) {
+    const count = seen.get(base) || 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base}-${count}`;
+}
 function elementRole(tag) {
     switch (tag) {
         case "p":
@@ -119,9 +138,10 @@ function walkNodes(root, $) {
     }
     return results;
 }
-function extractSections(root, $) {
+function extractSections(root, $, options = {}) {
     const sections = [];
     const nodes = walkNodes(root, $);
+    const seenIds = new Map();
     let currentHeading = null;
     const pendingBeforeHeading = [];
     let sectionIndex = 0;
@@ -134,26 +154,32 @@ function extractSections(root, $) {
             continue;
         if (isHeading(tag)) {
             const headingText = textOf($, el);
+            const level = Number(tag.replace("h", ""));
+            const baseId = `heading-${slugify(headingText)}-${hashString(headingText)}`;
             currentHeading = {
-                id: `section-${sectionIndex++}`,
+                id: buildId(baseId, seenIds),
                 role: "heading",
                 heading: headingText,
-                text: headingText,
-                html: htmlOf($, el)
+                level: Number.isNaN(level) ? undefined : level,
+                html: options.includeHtml ? htmlOf($, el) : undefined
             };
             if (pendingBeforeHeading.length) {
                 currentHeading.children = pendingBeforeHeading.splice(0);
             }
             pushSection(currentHeading);
+            sectionIndex += 1;
             continue;
         }
         const role = elementRole(tag);
         const text = textOf($, el);
+        const imageStructured = role === "image" ? extractImage($, el) : undefined;
+        const contentForId = role === "image" ? JSON.stringify(imageStructured) : text || htmlOf($, el);
+        const baseId = `${role}-${hashString(contentForId || `${role}-${sectionIndex}`)}`;
         const section = {
-            id: `section-${sectionIndex++}`,
+            id: buildId(baseId, seenIds),
             role,
             text: text || undefined,
-            html: htmlOf($, el) || undefined
+            html: options.includeHtml ? htmlOf($, el) || undefined : undefined
         };
         if (role === "list") {
             section.structured = extractList($, el);
@@ -165,7 +191,7 @@ function extractSections(root, $) {
             section.structured = extractCode($, el);
         }
         else if (role === "image") {
-            section.structured = extractImage($, el);
+            section.structured = imageStructured;
         }
         else if (role === "paragraph" && text && PRICE_RE.test(text)) {
             section.role = "price";
@@ -177,6 +203,7 @@ function extractSections(root, $) {
         else {
             pendingBeforeHeading.push(section);
         }
+        sectionIndex += 1;
     }
     if (!currentHeading && pendingBeforeHeading.length) {
         sections.push(...pendingBeforeHeading);

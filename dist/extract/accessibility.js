@@ -21,6 +21,10 @@ function selectorFor($, el) {
 function extractAccessibility($) {
     const nodes = [];
     const seen = new Set();
+    const scopeFor = (el) => {
+        const isNav = $(el).closest("nav,[role='navigation']").length > 0;
+        return isNav ? "navigation" : "content";
+    };
     const pushNode = (node) => {
         if (!node.selector)
             return;
@@ -34,14 +38,16 @@ function extractAccessibility($) {
         pushNode({
             role: $(el).attr("role") || "",
             label: $(el).attr("aria-label") || undefined,
-            selector: selectorFor($, el)
+            selector: selectorFor($, el),
+            scope: scopeFor(el)
         });
     });
     $("[aria-label]").each((_, el) => {
         pushNode({
             role: $(el).attr("role") || el.tagName || "",
             label: $(el).attr("aria-label") || undefined,
-            selector: selectorFor($, el)
+            selector: selectorFor($, el),
+            scope: scopeFor(el)
         });
     });
     $("h1, h2, h3, h4, h5, h6").each((_, el) => {
@@ -51,7 +57,8 @@ function extractAccessibility($) {
             role: "heading",
             label: $(el).text().trim() || undefined,
             level,
-            selector: selectorFor($, el)
+            selector: selectorFor($, el),
+            scope: scopeFor(el)
         });
     });
     $("button, a").each((_, el) => {
@@ -59,7 +66,8 @@ function extractAccessibility($) {
         pushNode({
             role: tag === "a" ? "link" : "button",
             label: $(el).text().trim() || $(el).attr("aria-label") || undefined,
-            selector: selectorFor($, el)
+            selector: selectorFor($, el),
+            scope: scopeFor(el)
         });
     });
     return nodes;

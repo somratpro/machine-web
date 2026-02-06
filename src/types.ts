@@ -30,6 +30,7 @@ export interface MCPSection {
     | "footer"
     | "unknown"
   heading?: string
+  level?: number
   text?: string
   html?: string
   structured?: Record<string, any>
@@ -41,6 +42,7 @@ export interface MCPAccessibilityNode {
   label?: string
   level?: number
   selector?: string
+  scope?: "content" | "navigation"
 }
 
 export interface MCPAction {
@@ -59,6 +61,7 @@ export interface MCPConfig {
     ignore?: string[]
   }
   actions?: MCPAction[]
+  includeHtml?: boolean
 }
 
 export interface ExtractOptions {

@@ -19,7 +19,7 @@ function extractMCPFromHTML(html, options) {
     const description = cleanText($("meta[name='description']").attr("content") || "") || undefined;
     const canonical = $("link[rel='canonical']").attr("href") || undefined;
     const language = $("html").attr("lang") || undefined;
-    const content = root ? (0, sections_1.extractSections)($(root), $) : [];
+    const content = root ? (0, sections_1.extractSections)($(root), $, { includeHtml: config.includeHtml }) : [];
     const accessibility = (0, accessibility_1.extractAccessibility)($);
     return {
         url: options.url,

@@ -14,7 +14,8 @@ const DEFAULT_CONFIG = {
         main: "main, article, [role='main']",
         ignore: ["script", "style", "noscript"]
     },
-    actions: []
+    actions: [],
+    includeHtml: false
 };
 exports.DEFAULT_CONFIG = DEFAULT_CONFIG;
 function loadConfig(cwd = process.cwd()) {
@@ -35,6 +36,7 @@ function mergeConfig(base, next) {
             main: next.selectors?.main ?? base.selectors?.main,
             ignore: next.selectors?.ignore ?? base.selectors?.ignore
         },
-        actions: next.actions ?? base.actions
+        actions: next.actions ?? base.actions,
+        includeHtml: next.includeHtml ?? base.includeHtml
     };
 }

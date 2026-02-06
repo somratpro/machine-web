@@ -18,6 +18,7 @@ export interface MCPSection {
     id: string;
     role: "heading" | "paragraph" | "list" | "table" | "image" | "code" | "quote" | "price" | "navigation" | "footer" | "unknown";
     heading?: string;
+    level?: number;
     text?: string;
     html?: string;
     structured?: Record<string, any>;
@@ -28,6 +29,7 @@ export interface MCPAccessibilityNode {
     label?: string;
     level?: number;
     selector?: string;
+    scope?: "content" | "navigation";
 }
 export interface MCPAction {
     name: string;
@@ -44,6 +46,7 @@ export interface MCPConfig {
         ignore?: string[];
     };
     actions?: MCPAction[];
+    includeHtml?: boolean;
 }
 export interface ExtractOptions {
     url: string;

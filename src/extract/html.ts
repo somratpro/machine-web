@@ -22,7 +22,7 @@ export function extractMCPFromHTML(html: string, options: Omit<ExtractOptions, "
   const canonical = $("link[rel='canonical']").attr("href") || undefined
   const language = $("html").attr("lang") || undefined
 
-  const content = root ? extractSections($(root), $) : []
+  const content = root ? extractSections($(root), $, { includeHtml: config.includeHtml }) : []
   const accessibility = extractAccessibility($)
 
   return {

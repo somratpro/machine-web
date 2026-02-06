@@ -1,3 +1,5 @@
 import type { CheerioAPI } from "cheerio";
 import type { MCPSection } from "../types";
-export declare function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI): MCPSection[];
+export declare function extractSections(root: ReturnType<CheerioAPI>, $: CheerioAPI, options?: {
+    includeHtml?: boolean;
+}): MCPSection[];
